@@ -80,6 +80,7 @@ namespace Puzzle
                     output.SetPixel(i, j, Color.FromArgb((int)pixel));
                 }
             }
+
             return output;
         }
     }
