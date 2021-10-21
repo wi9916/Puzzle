@@ -16,12 +16,16 @@ namespace Puzzle
     {
         private readonly IPuzzle _puzzle;
 
-        public FormMain()
+        //public FormMain()
+        //{
+        //    _puzzle = new Puzzle();
+        //    InitializeComponent();
+        //}
+        public FormMain(IPuzzle puzzle)
         {
-            _puzzle = new Puzzle();
+            _puzzle = puzzle;
             InitializeComponent();
         }
-        
         private void FormMain_Load(object sender, EventArgs e) {}
 
         private void PB_Click(object sender, EventArgs e)

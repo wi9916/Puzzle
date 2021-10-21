@@ -36,6 +36,7 @@ namespace Puzzle
         {
             LoadPicture();
         }
+
         private void LoadPicture()
         {
             var ofDlg = new OpenFileDialog();
@@ -72,6 +73,7 @@ namespace Puzzle
         {           
             if(Picture != null)  CreatePictureSegments();
         }
+
         public void CreatePictureSegments()
         {
             var width = (int)((double)Picture.Width / NumCollums + 0.5);
@@ -106,5 +108,7 @@ namespace Puzzle
                 }
             }
         }
+
+        private void pictureBox1_Click(object sender, EventArgs e){}
     }
 }
