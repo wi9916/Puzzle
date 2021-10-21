@@ -16,11 +16,6 @@ namespace Puzzle
     {
         private readonly IPuzzle _puzzle;
 
-        //public FormMain()
-        //{
-        //    _puzzle = new Puzzle();
-        //    InitializeComponent();
-        //}
         public FormMain(IPuzzle puzzle)
         {
             _puzzle = puzzle;
