@@ -13,9 +13,10 @@ namespace Puzzle.Interfaces
         PictureBox[] Segments { get; }
         int NumRows { get; }
         int NumCollums { get; }
-
+        List<IImagePositionSearch> ImageMask { get; }
         void StartCreatePuzzle();
 
-        void CreatePictureSegments(Control control, Size clientSize);             
+        void CreatePictureSegments();
+        void DrowPictureSegments(Control control, Size clientSize);
     }
 }

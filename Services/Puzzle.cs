@@ -11,12 +11,12 @@ namespace Puzzle
 {
     public class Puzzle: IPuzzle
     {
-        public Image[] Images { get; set; }
         private PictureBox[] segments;
         private int rows = 5;
         private int collums = 5;
         private PictureBox setSegment;
         private bool choseSegment = false;
+        public Image[] Images { get; set; }
         public PictureBox[] Segments { get => segments; }
         public int Rows { get => rows; }
         public int Collums { get => collums; }

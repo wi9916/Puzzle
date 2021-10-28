@@ -15,7 +15,6 @@ namespace Puzzle
     public partial class FormMain : Form
     {
         private readonly IPuzzle _puzzle;
-
         public FormMain(IPuzzle puzzle)
         {
             _puzzle = puzzle;
@@ -39,9 +38,10 @@ namespace Puzzle
                 string searchPattern = "*.*";
                 _puzzle.Images = Directory.GetFiles(folderPath, searchPattern).Select(Image.FromFile).ToArray();
                 _puzzle.CreatePictureSegments(this, ClientSize, PB_Click);
+
+                                
             }
         }
-
         private void toolStripButtonRefresh_Click(object sender, EventArgs e)
         {
             _puzzle.RefreshPicture();
@@ -78,10 +78,10 @@ namespace Puzzle
         
         private async void toolStripButtonHelp_Click(object sender, EventArgs e)
         {
-            await Task.Run(() => CreatePictureAvto());
+            await Task.Run(() => HelpPicture());
         }
 
-        private void CreatePictureAvto()
+        private void HelpPicture()
         {
             var imageMask = new List<IImagePositionSearch>();
             foreach (var img in _puzzle.Images)
@@ -90,7 +90,7 @@ namespace Puzzle
             }
 
             var FormHelp = new FormHelp(new AutoPuzzle(imageMask, _puzzle.Rows, _puzzle.Collums));
-            if (FormHelp.ShowDialog() == DialogResult.OK) { }            
+                if (FormHelp.ShowDialog() == DialogResult.OK) { }            
         }
 
         private void Form1_Resize(object sender, System.EventArgs e)

@@ -26,14 +26,15 @@ namespace Puzzle
         }
 
         private void FormHelp_Load(object sender, EventArgs e)
-        {           
-                _autoPuzzle.StartCreatePuzzle();
-                _autoPuzzle.CreatePictureSegments(this, ClientSize);
+        {
+            _autoPuzzle.StartCreatePuzzle();
+            _autoPuzzle.CreatePictureSegments();
+            _autoPuzzle.DrowPictureSegments(this, ClientSize);
         }
         
         private void FormHelp_SizeChanged(object sender, EventArgs e)
         {
-            _autoPuzzle.CreatePictureSegments(this, ClientSize);            
+            _autoPuzzle.DrowPictureSegments(this, ClientSize);
         }
     }
 }

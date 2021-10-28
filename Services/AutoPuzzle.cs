@@ -19,6 +19,8 @@ namespace Puzzle
         public PictureBox[] Segments { get => segments; }
         public int NumRows { get => numRows; }
         public int NumCollums { get => numCollums; }
+        public List<IImagePositionSearch> ImageMask { get => imageMask; }
+
         public AutoPuzzle() { }       
         public AutoPuzzle(List<IImagePositionSearch> imageMask, int numRows, int numCollums)
         {
@@ -27,6 +29,7 @@ namespace Puzzle
             this.imageMask = imageMask;
         }
 
+        public Control control;public Size clientSize;
         public void StartCreatePuzzle()
         {
             int imageId = 0;
@@ -36,7 +39,6 @@ namespace Puzzle
             var serchAccuracyMin = new List<double>(2);
             var serchAccuracyAverage = new List<double>(2) { 0, 0 };
 
-            imageMask[imageId].SetXY(0, 0);
             imgBase = imageMask[imageId].ImgSide[0];
             serchAccuracyMin.Add(LookPixel(imgBase, imageMask[0].ImgSide[2]));
 
@@ -65,23 +67,23 @@ namespace Puzzle
 
             if (serchAccuracyMin[1] < serchAccuracyMin[0])
             {
-                serchAccuracy = serchAccuracyAverage[1] / 4 / imageMask.Count();
+                serchAccuracy = serchAccuracyAverage[1] / 5 / imageMask.Count();
             }
             else
             {
-                serchAccuracy = serchAccuracyAverage[0] / 4 / imageMask.Count();
+                serchAccuracy = serchAccuracyAverage[0] / 5 / imageMask.Count();
             }
+            BaseSerch(0, serchAccuracy, new ImagePositionSearch(-3000, -3000));
 
-            BaseSerch(imageId, serchAccuracy, new ImagePositionSearch(0, 0));
-
-            var lostImage = imageMask.Where(a => a.KnownPosition == false);
+            var lostImage = imageMask.Where(a => a.KnownPosition == false).ToList();
             while (lostImage.Count() > 0)
             {
                 LostImageSearch(lostImage.Last().Id);
+                lostImage.RemoveAt(lostImage.Count - 1);
             }
         }
 
-        public void CreatePictureSegments(Control control,Size clientSize)
+        public void CreatePictureSegments()
         {
             if (segments != null)
             {
@@ -91,11 +93,16 @@ namespace Puzzle
                 }
                 segments = null;
             }
-            var minW = imageMask.Min(a => a.Width);
-            var minH = imageMask.Min(a => a.Height);
-            var maxW = imageMask.Max(a => a.Width);
-            var maxH = imageMask.Max(a => a.Height);
+            var lostImage = imageMask.Where(a => a.KnownPosition == false).ToList();
 
+            var minW = imageMask.Where(a => a.KnownPosition == true).Min(a => a.Width);
+            var minH = imageMask.Where(a => a.KnownPosition == true).Min(a => a.Height);
+            var maxW = imageMask.Where(a => a.KnownPosition == true).Max(a => a.Width);
+            var maxH = imageMask.Where(a => a.KnownPosition == true).Max(a => a.Height);
+            /////////////////
+            //var im = imageMask.Where(a => a.Width == -3000 && a.Height == -3000).ToList();
+            //var lost = imageMask.Where(a => a.KnownPosition == false).ToList();
+            /////////////////////
             numCollums = 0;
             for (int i = minW; i <= maxW; i++)
                 numCollums++;
@@ -103,6 +110,30 @@ namespace Puzzle
             numRows = 0;
             for (int i = minH; i <= maxH; i++)
                 numRows++;
+
+            for (int i = 0; i < numRows; i++)
+            {
+                for (int j = 0; j < numCollums; j++)
+                {
+                    var imMask = from t in imageMask
+                                 where t.Width - minW == j && t.Height - minH == i
+                                 select t;
+                    if(imMask.Count() > 0)
+                        imMask.First().SetXY(j, i);
+                }
+            }
+        }
+        public void DrowPictureSegments(Control control, Size clientSize)
+        {
+            if (segments != null)
+            {
+                for (int i = 0; i < segments.Length; i++)
+                {
+                    if (segments[i] != null)
+                        segments[i].Dispose();
+                }
+                segments = null;
+            }
 
             segments = new PictureBox[numRows * numCollums];
             var segmentIndex = 0;
@@ -114,7 +145,7 @@ namespace Puzzle
                 for (int j = 0; j < numCollums; j++)
                 {
                     var imMask = from t in imageMask
-                                 where t.Width - minW == j && t.Height - minH == i
+                                 where t.Width == j && t.Height == i
                                  select t;
 
                     segments[segmentIndex] = new PictureBox
@@ -143,7 +174,6 @@ namespace Puzzle
                 }
             }
         }
-
         private Double LookPixel(Image imgBase, Image imgPrev)
         {
             Double change = 0;
@@ -174,52 +204,66 @@ namespace Puzzle
         {
             var correntAccuracy = new List<double>(5) { 9000, 9000, 9000, 9000, 0 };
             var correntAccuracyId = new List<int>(4) { -1, -1, -1, -1 };
+            var imgP = new ImagePositionSearch();
             foreach (var p in imageMask.Where(a => a.KnownPosition == true))
             {
-                correntAccuracy[4] = LookPixel(imageMask[id].ImgSide[0], p.ImgSide[2]);
-                if (correntAccuracy[4] < correntAccuracy[0])
+                imgP = new ImagePositionSearch(p.Width, p.Height - 1);
+                if (!imageMask.Any(_ => _.Width == imgP.Width && _.Height == imgP.Height))
                 {
-                    correntAccuracy[0] = correntAccuracy[4];
-                    correntAccuracyId[0] = p.Id;
+                    correntAccuracy[4] = LookPixel(p.ImgSide[0], imageMask[id].ImgSide[2]);
+                    if (correntAccuracy[4] < correntAccuracy[0])
+                    {
+                        correntAccuracy[0] = correntAccuracy[4];
+                        correntAccuracyId[0] = p.Id;
+                    }
                 }
 
-                correntAccuracy[4] = LookPixel(imageMask[id].ImgSide[1], p.ImgSide[3]);
-                if (correntAccuracy[4] < correntAccuracy[1])
+                imgP = new ImagePositionSearch(p.Width - 1, p.Height);
+                if (!imageMask.Any(_ => _.Width == imgP.Width && _.Height == imgP.Height))
                 {
-                    correntAccuracy[1] = correntAccuracy[4];
-                    correntAccuracyId[1] = p.Id;
+                    correntAccuracy[4] = LookPixel(p.ImgSide[1], imageMask[id].ImgSide[3]);
+                    if (correntAccuracy[4] < correntAccuracy[1])
+                    {
+                        correntAccuracy[1] = correntAccuracy[4];
+                        correntAccuracyId[1] = p.Id;
+                    }
                 }
 
-                correntAccuracy[4] = LookPixel(imageMask[id].ImgSide[2], p.ImgSide[0]);
-                if (correntAccuracy[4] < correntAccuracy[2])
+                imgP = new ImagePositionSearch(p.Width, p.Height + 1);
+                if (!imageMask.Any(_ => _.Width == imgP.Width && _.Height == imgP.Height))
                 {
-                    correntAccuracy[2] = correntAccuracy[4];
-                    correntAccuracyId[2] = p.Id;
+                    correntAccuracy[4] = LookPixel(p.ImgSide[2], imageMask[id].ImgSide[0]);
+                    if (correntAccuracy[4] < correntAccuracy[2])
+                    {
+                        correntAccuracy[2] = correntAccuracy[4];
+                        correntAccuracyId[2] = p.Id;
+                    }
                 }
 
-                correntAccuracy[4] = LookPixel(imageMask[id].ImgSide[3], p.ImgSide[1]);
-                if (correntAccuracy[4] < correntAccuracy[3])
+                imgP = new ImagePositionSearch(p.Width + 1, p.Height);
+                if (!imageMask.Any(_ => _.Width == imgP.Width && _.Height == imgP.Height))
                 {
-                    correntAccuracy[3] = correntAccuracy[4];
-                    correntAccuracyId[3] = p.Id;
+                    correntAccuracy[4] = LookPixel(p.ImgSide[3], imageMask[id].ImgSide[1]);
+                    if (correntAccuracy[4] < correntAccuracy[3])
+                    {
+                        correntAccuracy[3] = correntAccuracy[4];
+                        correntAccuracyId[3] = p.Id;
+                    }
                 }
             }
             correntAccuracy.RemoveAt(4);
 
             if (correntAccuracy.IndexOf(correntAccuracy.Min()) == 0)
-                imageMask[id].SetXY(imageMask[correntAccuracyId[0]].Width, imageMask[correntAccuracyId[0]].Height + 1);
+                imageMask[id].SetXY(imageMask[correntAccuracyId[0]].Width, imageMask[correntAccuracyId[0]].Height - 1);
 
             if (correntAccuracy.IndexOf(correntAccuracy.Min()) == 1)
-                imageMask[id].SetXY(imageMask[correntAccuracyId[1]].Width + 1, imageMask[correntAccuracyId[1]].Height);
+                imageMask[id].SetXY(imageMask[correntAccuracyId[1]].Width - 1, imageMask[correntAccuracyId[1]].Height);
 
             if (correntAccuracy.IndexOf(correntAccuracy.Min()) == 2)
-                imageMask[id].SetXY(imageMask[correntAccuracyId[2]].Width, imageMask[correntAccuracyId[2]].Height - 1);
+                imageMask[id].SetXY(imageMask[correntAccuracyId[2]].Width, imageMask[correntAccuracyId[2]].Height + 1);
 
             if (correntAccuracy.IndexOf(correntAccuracy.Min()) == 3)
-                imageMask[id].SetXY(imageMask[correntAccuracyId[3]].Width - 1, imageMask[correntAccuracyId[3]].Height);
-
-            if (imageMask[id].KnownPosition == false)
-                imageMask[id].KnownPosition = true;
+                imageMask[id].SetXY(imageMask[correntAccuracyId[3]].Width + 1, imageMask[correntAccuracyId[3]].Height);
         }
 
         private void BaseSerch(int imageId, double serchAccuracy, IImagePositionSearch _imgP)
@@ -272,7 +316,7 @@ namespace Puzzle
                         pointNext = i;
                     }
                 }
-            }
+            }           
 
             if (pointNext != 0)
             {
