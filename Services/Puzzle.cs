@@ -43,12 +43,16 @@ namespace Puzzle
             {
                 segments[i].Width = w;
                 segments[i].Height = h;
-
-                var countX = segments[i].Left /= oldwidth;
-                var countY = segments[i].Top /= oldheight;
-
-                segments[i].Left = countX * w;
-                segments[i].Top = countY * h + 25;
+                try
+                {
+                    var countX = segments[i].Left /= oldwidth;
+                    var countY = segments[i].Top /= oldheight;
+                    segments[i].Left = countX * w;
+                    segments[i].Top = countY * h + 25;
+                }
+                catch (Exception)
+                { }
+                
             }
         }
 
